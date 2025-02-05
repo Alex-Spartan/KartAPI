@@ -25,7 +25,6 @@ router.post('/register', async (req, res) => {
         })
         
         await newUser.save();
-        console.log(newUser);
         res.status(201).json(newUser);
     }
     catch (err) {
@@ -35,14 +34,14 @@ router.post('/register', async (req, res) => {
 
 router.post('/login', async (req, res) => {
     try {
-
-        const user = await User.findOne({username: req.body.username})
+        const {email, password} = req.body;
+        const user = await User.findOne({email: email})
         if (!user) {
             return res.status(400).json({error: 'Invalid Credential'})
         }
 
         const pass = user.password;
-        const compare = await bcrypt.compare(req.body.password, pass)
+        const compare = await bcrypt.compare(password, pass)
         if (!compare) {
             return res.status(400).json({error: 'Invalid Credential'})
         }
@@ -54,9 +53,7 @@ router.post('/login', async (req, res) => {
         process.env.JWT_SECRET,
         {expiresIn: '1d'}
         )
-
-        const {password, ...others} = user._doc;
-        return res.status(201).json({...others, accessToken});
+        return res.status(201).json({...user._doc, password: null, accessToken});
     } 
     catch (err) {
         return res.status(500).json({error: err})
