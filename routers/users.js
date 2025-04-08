@@ -2,64 +2,38 @@ import express from 'express';
 import User from '../models/User.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { verifyTokenAndAdmin } from '../controllers/verifyAuth.js';
 
 const router = express.Router();
 
-
-router.post('/register', async (req, res) => {
+router.get("/", async (req, res) => {
     try {
-        const exists = await User.findOne({
-            username : req.body.username,
-            email : req.body.email,
-        });
-
-        if (exists) {
-            return res.status(400).json({error: 'User already exists'})
-        }
-
-        const hashed = await bcrypt.hash(req.body.password, 10)
-        const newUser = new User({
-            username : req.body.username,
-            email : req.body.email,
-            password : hashed,
-        })
-        
-        await newUser.save();
-        res.status(201).json(newUser);
+        const users = await User.find({});
+        res.status(200).json(users);
+    } catch (error) {
+        console.error("Error fetching users:", error);
+        res.status(500).json({ error: "Server error" });
     }
-    catch (err) {
-        return res.status(500).json(err)
-    }
-})
+});
 
-router.post('/login', async (req, res) => {
+
+router.post("/firebase-auth", async (req, res) => {
+    const { name, email, avatar, firebaseUid } = req.body;
+    console.log(req.body);
     try {
-        const {email, password} = req.body;
-        const user = await User.findOne({email: email})
+        let user = await User.findOne({ firebaseUid });
         if (!user) {
-            return res.status(400).json({error: 'Invalid Credential'})
+            user = await User.create({ name, email, avatar, firebaseUid });
         }
 
-        const pass = user.password;
-        const compare = await bcrypt.compare(password, pass)
-        if (!compare) {
-            return res.status(400).json({error: 'Invalid Credential'})
-        }
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
-        const accessToken = jwt.sign({
-            id: user._id, 
-            isAdmin: user.isAdmin,
-        }, 
-        process.env.JWT_SECRET,
-        {expiresIn: '1d'}
-        )
-        return res.status(201).json({...user._doc, password: null, accessToken});
-    } 
-    catch (err) {
-        return res.status(500).json({error: err})
+        res.status(200).json({ token, user });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Server error" });
     }
-})
-
+});
 
 
 export default router;
