@@ -19,7 +19,6 @@ router.get("/", async (req, res) => {
 
 router.post("/firebase-auth", async (req, res) => {
     const { name, email, avatar, firebaseUid } = req.body;
-    console.log(req.body);
     try {
         let user = await User.findOne({ firebaseUid });
         if (!user) {
