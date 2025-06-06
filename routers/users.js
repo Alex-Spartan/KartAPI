@@ -1,6 +1,5 @@
 import express from 'express';
 import User from '../models/User.js';
-import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { verifyTokenAndAdmin } from '../controllers/verifyAuth.js';
 
@@ -8,8 +7,7 @@ const router = express.Router();
 
 router.get("/", async (req, res) => {
     try {
-        const users = await User.find({});
-        res.status(200).json(users);
+        res.status(200).json({"message": "Welcome to the user route"});
     } catch (error) {
         console.error("Error fetching users:", error);
         res.status(500).json({ error: "Server error" });
