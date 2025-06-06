@@ -5,7 +5,7 @@ const productSchema = new Schema({
     desc: {type: String, required: true},
     img: {type: String, required: true},
     categories: { type: Array },
-    size: {type: [String], enum: ['S', 'M', 'L']},
+    size: {type: [String], enum: ['S', 'M', 'L', 'XL']},
     color: {type: [String], required: true},
     price: {type: Number, required: true},
     inStock: {type: Boolean, default: true}
